@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+crm.db
+*.sqlite
+*.sqlite3
+.env
+.env.*

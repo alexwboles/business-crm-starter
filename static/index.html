@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SignalDesk CRM</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark">S</span><span>SignalDesk</span></div>
+    <nav>
+      <a class="active" href="#dashboard">Overview</a>
+      <a href="#pipeline">Pipeline</a>
+      <a href="#followups">Follow-ups</a>
+    </nav>
+    <div class="sidebar-note">Local demo<br><strong>No external data sent</strong></div>
+  </aside>
+
+  <main>
+    <header>
+      <div>
+        <p class="eyebrow">BUSINESS COMMAND CENTER</p>
+        <h1>Good afternoon, Alex.</h1>
+        <p class="subhead">Know who needs attention and what to do next.</p>
+      </div>
+      <button id="open-form" class="primary">+ Add lead</button>
+    </header>
+
+    <section id="dashboard" class="metrics" aria-label="Pipeline summary">
+      <article><span>Open leads</span><strong id="open-count">—</strong><small>Active opportunities</small></article>
+      <article><span>Pipeline value</span><strong id="pipeline-value">—</strong><small>Open potential</small></article>
+      <article><span>Follow-ups due</span><strong id="followups-due">—</strong><small>Recommended today</small></article>
+      <article><span>Won value</span><strong id="won-value">—</strong><small>Closed business</small></article>
+    </section>
+
+    <section class="panel stage-panel">
+      <div class="panel-heading"><div><p class="eyebrow">PIPELINE HEALTH</p><h2>Opportunity flow</h2></div><span class="live-dot">Live local data</span></div>
+      <div id="stage-bars" class="stage-bars"></div>
+    </section>
+
+    <section id="pipeline" class="panel">
+      <div class="panel-heading">
+        <div><p class="eyebrow">PRIORITY QUEUE</p><h2>Leads requiring attention</h2></div>
+        <label class="search"><span>⌕</span><input id="search" placeholder="Search name or company"></label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Contact</th><th>Stage</th><th>Value</th><th>Priority</th><th>Recommended action</th></tr></thead>
+          <tbody id="lead-rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="lead-dialog">
+    <form id="lead-form">
+      <div class="dialog-head"><div><p class="eyebrow">NEW OPPORTUNITY</p><h2>Add a lead</h2></div><button type="button" id="close-form" class="icon-button">×</button></div>
+      <div class="form-grid">
+        <label>Name<input name="name" required></label>
+        <label>Company<input name="company"></label>
+        <label>Email<input name="email" type="email" required></label>
+        <label>Source<select name="source"><option>Direct</option><option>Website</option><option>Referral</option><option>Email</option></select></label>
+        <label>Estimated value<input name="value" type="number" min="0" step="50" value="0"></label>
+        <label>Follow-up date<input name="next_followup" type="date"></label>
+      </div>
+      <label>Notes<textarea name="notes" rows="3"></textarea></label>
+      <p id="form-error" class="error" role="alert"></p>
+      <div class="dialog-actions"><button type="button" id="cancel-form" class="secondary">Cancel</button><button class="primary" type="submit">Save lead</button></div>
+    </form>
+  </dialog>
+
+  <script src="/app.js"></script>
+</body>
+</html>
