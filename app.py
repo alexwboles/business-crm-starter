@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sqlite3
 from contextlib import closing
 from datetime import date, datetime, timedelta
@@ -48,6 +49,8 @@ class CRMStore:
             )
 
     def add_lead(self, payload: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(payload, dict):
+            raise ValueError("Lead must be a JSON object.")
         name = str(payload.get("name", "")).strip()
         email = str(payload.get("email", "")).strip().lower()
         if not name or "@" not in email:
@@ -55,6 +58,24 @@ class CRMStore:
         stage = str(payload.get("stage", "New"))
         if stage not in STAGES:
             raise ValueError("Invalid pipeline stage.")
+        try:
+            if isinstance(payload.get("value"), (bool, list, dict)):
+                raise ValueError("Invalid number type.")
+            amount = float(payload.get("value", 0) or 0)
+        except (ValueError, TypeError, OverflowError) as exc:
+            raise ValueError("Value must be a finite, nonnegative number.") from exc
+        if not math.isfinite(amount) or amount < 0:
+            raise ValueError("Value must be a finite, nonnegative number.")
+        dates = {}
+        for field in ("last_contacted", "next_followup"):
+            raw = payload.get(field)
+            if raw is None or raw == "":
+                dates[field] = None
+                continue
+            try:
+                dates[field] = date.fromisoformat(raw).isoformat()
+            except (ValueError, TypeError) as exc:
+                raise ValueError(f"{field} must be a valid ISO date.") from exc
         created_at = datetime.now().replace(microsecond=0).isoformat()
         values = (
             name,
@@ -62,9 +83,9 @@ class CRMStore:
             email,
             str(payload.get("source", "Direct")).strip() or "Direct",
             stage,
-            float(payload.get("value", 0) or 0),
-            payload.get("last_contacted") or None,
-            payload.get("next_followup") or None,
+            amount,
+            dates["last_contacted"],
+            dates["next_followup"],
             str(payload.get("notes", "")).strip(),
             created_at,
         )
@@ -221,7 +242,12 @@ class CRMHandler(BaseHTTPRequestHandler):
 
     def _body(self) -> dict[str, Any]:
         length = int(self.headers.get("Content-Length", "0"))
-        return json.loads(self.rfile.read(length) or b"{}")
+        if length < 0 or length > 65536:
+            raise ValueError("Request body must be no larger than 64 KiB.")
+        body = json.loads(self.rfile.read(length) or b"{}")
+        if not isinstance(body, dict):
+            raise ValueError("Request body must be a JSON object.")
+        return body
 
     def do_GET(self) -> None:
         path = urlparse(self.path).path

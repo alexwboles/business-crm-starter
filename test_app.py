@@ -12,6 +12,22 @@ from app import CRMHandler, CRMStore
 
 
 class CRMStoreTests(unittest.TestCase):
+    def test_invalid_dates_do_not_poison_database(self):
+        for value in ("tomorrow", "2026-02-30", [], 123):
+            with self.assertRaises(ValueError):
+                self.store.add_lead(self.sample(next_followup=value))
+        self.assertEqual(self.store.dashboard()["lead_count"], 0)
+
+    def test_invalid_amounts_rejected_before_insert(self):
+        for value in ("NaN", "Infinity", -1, [], {}, True):
+            with self.assertRaises(ValueError):
+                self.store.add_lead(self.sample(value=value))
+        self.assertEqual(self.store.dashboard()["lead_count"], 0)
+
+    def test_non_object_lead_rejected(self):
+        with self.assertRaises(ValueError):
+            self.store.add_lead([])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.store = CRMStore(Path(self.temp.name) / "test.db")
